@@ -4,6 +4,7 @@ import hashlib
 import base64
 import hmac
 import json
+from utils import parse_srt_file, save_srt_file
 
 class NiuTransTranslator:
     def __init__(self, app_id="e8437c4a", api_key="35586b25a94f4b4fe61889fc307eaabf", api_secret="OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl", host="ntrans.xfyun.cn"):
@@ -92,16 +93,26 @@ class NiuTransTranslator:
             print(f"请求异常：{e}")
             return None
 
+def text_translate(text, from_lang='auto', to_lang='auto'):
+    translator = NiuTransTranslator(app_id, api_key, api_secret)
+    trans_text = translator.translate(text, from_lang, to_lang)
+    return trans_text
+
+def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='auto', to_lang='auto'):
+    srt_data = parse_srt_file(origin_srt_file)
+    translator = NiuTransTranslator(app_id, api_key, api_secret)
+    trans_srt_data = []
+    for index, (timestamp, text) in enumerate(srt_data):
+        trans_text = translator.translate(text, from_lang, to_lang)
+        dst_text = trans_text['data']['result']['trans_result']['dst']
+        trans_srt_data.append((timestamp, dst_text))
+    save_srt_file(trans_srt_data, trans_srt_file)            
+        
 if __name__ == '__main__':
     app_id = "e8437c4a"
     api_key = "35586b25a94f4b4fe61889fc307eaabf"
     api_secret = "OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl"
 
-    translator = NiuTransTranslator(app_id, api_key, api_secret)
-    text = "爱你,爱你。"
-    result = translator.translate(text, from_lang='zh', to_lang='en')
-    json.dumps(result) 
-    if result:
-        print(result)
-    else:
-        print("翻译失败或结果为空。")
+    origin_srt_file = "output/重庆森林片段.srt"
+    trans_srt_file = "output/重庆森林片段_en.srt"
+    subtitle_translate(app_id,api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='zh', to_lang='en')
