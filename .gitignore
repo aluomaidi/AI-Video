@@ -1,0 +1,9 @@
+# 忽略所有的 .DS_Store 文件（macOS）
+.DS_Store
+
+# 忽略所有的 output 文件夹
+output/
+
+# 忽略所有的 .mp4 文件
+#*.mp4
+
