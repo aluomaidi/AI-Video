@@ -19,6 +19,8 @@ voice = "重庆森林片段.mp4"
 start_time = time.time()
 
 result = model.transcribe(voice,language="zh",word_timestamps=True,initial_prompt="请转录为简体中文。")
+# result = model.transcribe(voice,language="en",word_timestamps=True)
+
 print(result["text"])
 segments =result["segments"]
 translator = NiuTransTranslator()

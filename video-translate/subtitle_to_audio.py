@@ -2,6 +2,7 @@ import asyncio
 import edge_tts
 import os
 import subprocess
+from utils import parse_srt_file
 
 def parse_srt_file(srt_file):
     """
@@ -95,7 +96,7 @@ async def main(srt_file, output_file, voice='en-US-AriaNeural'):
         os.remove(temp_file)
 
 if __name__ == "__main__":
-    srt_file = "output/重庆森林片段.srt"
+    srt_file = "output/重庆森林片段_en.srt"
     output_file = "output/synthesize.mp3"
     # voice = 'zh-CN-shaanxi-XiaoniNeural'
     voice = 'zh-CN-XiaoxiaoNeural'
