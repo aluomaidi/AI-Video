@@ -1,6 +1,5 @@
-#视频翻译：抽音频->抽帧->音频识别（生成字幕）->字幕翻译->字幕合成音频->合成图片帧为视频->合并音频和视频->合成字幕-》添加水印
+#视频翻译：抽音频->抽无声视频->音频识别（生成字幕）->字幕翻译->字幕合成音频-->合并音频和视频->合成字幕->添加水印
 import asyncio
-import subprocess
 import os
 import extractor as extractor
 import recognizer as recognizer
