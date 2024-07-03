@@ -1,5 +1,6 @@
 import ffmpeg
 import subprocess
+import shlex
 import os
 
 def extract_audio(video, audio, audio_format='mp3'):
@@ -13,7 +14,18 @@ def extract_frames(video, frames_dir, fps='24', frames_pattern='frame_%06d.png')
     output_pattern = os.path.join(frames_dir, frames_pattern)
     # 调用 ffmpeg 抽帧
     subprocess.run(['ffmpeg', '-i', video, '-vf', f'fps={fps}', output_pattern, '-y'])
+
+def extract_video_without_audio(input_video, output_video):
+    """
+    从视频文件中提取无声视频。
     
+    参数:
+    input_video (str): 输入视频文件的路径。
+    output_video (str): 输出无声视频文件的路径。
+    """
+    cmd = f"ffmpeg -i {input_video} -an {output_video} -y"
+    subprocess.run(shlex.split(cmd))
+
 if __name__ == '__main__':
     video = '重庆森林片段.mp4'
     audio = 'output/重庆森林片段.mp3'

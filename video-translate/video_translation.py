@@ -15,7 +15,7 @@ trans_language = 'en'
 trans_video = "output/数字人播报_en.mp4"
 trans_audio = "output/trans.mp3"
 trans_srt = "output/trans.srt"
-fps = '24'
+fps = '30'
 frames_pattern = 'frame_%06d.png'
 frames_dir = 'output/frames/'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -40,8 +40,8 @@ asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
 
 # 合成图片帧为视频
 subprocess.run([
-    'ffmpeg', '-framerate', '24', '-i', frames_dir + frames_pattern,
-    '-c:v', 'libx264', '-r', '24', '-pix_fmt', 'yuv420p', 'output/frames_video.mp4', '-y'
+    'ffmpeg', '-framerate', fps, '-i', frames_dir + frames_pattern,
+    '-c:v', 'libx264', '-r', fps, '-pix_fmt', 'yuv420p', 'output/frames_video.mp4', '-y'
 ])
 
 # 合并音频和视频

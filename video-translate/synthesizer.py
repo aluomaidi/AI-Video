@@ -19,20 +19,20 @@ def merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file):
     # 执行ffmpeg命令
     subprocess.run(ffmpeg_command, check=True)
     
-async def text_to_speech(text, audio_file, voice):
+async def text_to_speech(text, audio_file, voice, rate):
     try:
-        communicate = edge_tts.Communicate(text, voice)
+        communicate = edge_tts.Communicate(text, voice, rate=rate)
         await communicate.save(audio_file)
     except Exception as e:
         print(f"An error occurred during synthesis: {e}")
 
-async def srt_to_speech(srt, audio_file, voice):
+async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     srt_data = parse_srt_file(srt)
     temp_files = []
     for index, (timestamp, text) in enumerate(srt_data):
         temp_file = f"temp_{index}.mp3"
         temp_files.append(temp_file)
-        await text_to_speech(text, temp_file, voice)
+        await text_to_speech(text, temp_file, voice, rate)
 
     merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file)
     # 清理临时文件
