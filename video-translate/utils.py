@@ -3,6 +3,7 @@ from typing import List, Tuple
 import subprocess
 import shlex
 import os
+import math
 
 def parse_srt_file(srt_file):
     """
@@ -55,12 +56,68 @@ def save_srt_file(srt_data: List[Tuple[str, str]], output_file: str):
             file.write(f"{index}\n")
             file.write(f"{timestamp}\n")
             file.write(f"{text}\n\n")
+
+def multiply_timestamp(timestamp, multiplier):
+    # 将时间戳拆分成开始时间和结束时间部分
+    start, end = timestamp.split(" --> ")
+
+    # 处理开始时间
+    start_parts = start.split(":")
+    hours = int(start_parts[0])
+    minutes = int(start_parts[1])
+    seconds, milliseconds = map(int, start_parts[2].replace(",", ".").split("."))
+
+    # 计算新的开始时间
+    new_start_seconds = hours * 3600 + minutes * 60 + seconds
+    new_start_seconds *= multiplier
+    new_start_hours = int(new_start_seconds // 3600)
+    new_start_seconds %= 3600
+    new_start_minutes = int(new_start_seconds // 60)
+    new_start_seconds %= 60
+    new_start_milliseconds = int(milliseconds * multiplier)
+
+    # 格式化新的开始时间
+    new_start_time = "{:02}:{:02}:{:02},{:03}".format(
+        new_start_hours, new_start_minutes, new_start_seconds, new_start_milliseconds
+    )
+
+    # 处理结束时间
+    end_parts = end.split(":")
+    hours = int(end_parts[0])
+    minutes = int(end_parts[1])
+    seconds, milliseconds = map(int, end_parts[2].replace(",", ".").split("."))
+
+    # 计算新的结束时间
+    new_end_seconds = hours * 3600 + minutes * 60 + seconds
+    new_end_seconds *= multiplier
+    new_end_hours = int(new_end_seconds // 3600)
+    new_end_seconds %= 3600
+    new_end_minutes = int(new_end_seconds // 60)
+    new_end_seconds %= 60
+    new_end_milliseconds = int(milliseconds * multiplier)
+
+    # 格式化新的结束时间
+    new_end_time = "{:02}:{:02}:{:02},{:03}".format(
+        new_end_hours, new_end_minutes, new_end_seconds, new_end_milliseconds
+    )
+
+    # 返回新的时间戳字符串
+    return f"{new_start_time} --> {new_end_time}"
+
+def adjust_subtitle_timestamp(subtitle, multiplier):
+    srt_data = parse_srt_file(subtitle)
+    new_srt_data = []
+    for index, (timestamp, text) in enumerate(srt_data):
+        new_timestamp = multiply_timestamp(timestamp, multiplier)
+        new_srt_data.append((new_timestamp, text))  
+    subtitle = "output/output.srt"      
+    save_srt_file(new_srt_data, subtitle)
+    return subtitle            
  #提取文件名称的函数
 def extract_filename(file_path):
     base_name = os.path.basename(file_path)
     filename, _ = os.path.splitext(base_name)  # 分割文件名和扩展名
     return base_name, filename
-
 
 def get_media_length(file_path):
     """
@@ -85,10 +142,13 @@ def adjust_video_speed(input_video, adjustment_ratio, output_video):
     subprocess.run(shlex.split(cmd))
 
 def merge_audio_video(input_video, input_audio, output_file):
-    """
-    合并音频和视频文件。
-    """
     cmd = f"ffmpeg -i {input_video} -i {input_audio} -c:v copy -c:a aac {output_file} -y"
+    subprocess.run(shlex.split(cmd))
+
+def merge_audio_video_with_subtitles(input_video, input_audio, subtitles_file, output_file):
+    # FFmpeg命令，将视频、音频和字幕合并
+    cmd = f"ffmpeg -i {input_video} -i {input_audio} -vf subtitles={subtitles_file} -c:v libx264 -c:a aac {output_file} -y"
+    # 使用subprocess运行命令
     subprocess.run(shlex.split(cmd))
 
 def sync_audio_video(input_video, input_audio, output_final, threshold=1.35):
@@ -133,6 +193,62 @@ def sync_audio_video(input_video, input_audio, output_final, threshold=1.35):
     # 删除临时文件
     subprocess.run(shlex.split(f"rm {adjusted_audio} {adjusted_video}"))
 
+def sync_audio_video_subtitle(input_video, input_audio, subtitle, original_audio, output_final, threshold=1.35):
+    # 获取视频和音频长度
+    video_length = get_media_length(input_video)
+    audio_length = get_media_length(input_audio)
+    original_audio_length = get_media_length(original_audio)
+    print(f"Video length: {video_length} seconds")
+    print(f"Audio length: {audio_length} seconds")
+    print(f"Original Audio length: {original_audio_length} seconds")
+
+    # 音视频长度差异比例
+    ratio = 1
+    adjusted_audio = "adjusted_audio.mp3"
+    adjusted_video = "adjusted_video.mp4"
+
+    if audio_length > video_length: #音频加速，视频减速
+        ratio = audio_length / video_length
+        if ratio < threshold:
+            print("Adjusting audio speed to match video speed.")
+            adjust_audio_speed(input_audio, ratio, adjusted_audio)
+            #字幕和音频同步
+            adjusted_audio_length = audio_length/ratio
+            audio_time_ratio = adjusted_audio_length / original_audio_length
+            subtitle_adjusted = adjust_subtitle_timestamp(subtitle, audio_time_ratio)
+            merge_audio_video_with_subtitles(input_video, adjusted_audio, subtitle_adjusted, output_final)
+        else:
+            print("Audio speed adjustment exceeds threshold.  Adjusting both.")
+            new_ratio = math.sqrt(ratio)
+            adjust_audio_speed(input_audio, new_ratio, adjusted_audio)
+            #字幕和音频同步
+            adjusted_audio_length = audio_length/new_ratio
+            audio_time_ratio = adjusted_audio_length / original_audio_length
+            subtitle_adjusted = adjust_subtitle_timestamp(subtitle, audio_time_ratio)
+            
+            adjust_video_speed(input_video, 1/new_ratio, adjusted_video)
+            merge_audio_video_with_subtitles(input_video, adjusted_audio, subtitle_adjusted, output_final)
+    else: #视频加速、音频减速
+        ratio = video_length / audio_length
+        if ratio < threshold:
+            print("Adjusting video speed to match audio speed.")
+            adjust_video_speed(input_video, ratio, adjusted_video)
+            merge_audio_video(adjusted_video, input_audio, output_final)
+        else: 
+            print("Audio speed adjustment exceeds threshold.  Adjusting both.")
+            new_ratio = math.sqrt(ratio)
+            adjust_audio_speed(input_audio, 1/new_ratio, adjusted_audio)
+            #字幕和音频同步
+            adjusted_audio_length = audio_length * new_ratio
+            audio_time_ratio = adjusted_audio_length / original_audio_length
+            subtitle_adjusted = adjust_subtitle_timestamp(subtitle, audio_time_ratio)
+            
+            adjust_video_speed(input_video, new_ratio, adjusted_video)
+            merge_audio_video_with_subtitles(input_video, adjusted_audio, subtitle_adjusted, output_final)
+
+    # 删除临时文件
+    subprocess.run(shlex.split(f"rm {adjusted_audio} {adjusted_video}"))
+
 def split_video(input_video, start_time, duration, output_video):
     """
     拆分视频文件。
@@ -147,8 +263,16 @@ def split_video(input_video, start_time, duration, output_video):
     subprocess.run(shlex.split(cmd))
     
 if __name__ == "__main__":
-    input_video = "output/frames_video.mp4"
-    input_audio = "output/trans.mp3"
+    # input_video = "output/frames_video.mp4"
+    # input_audio = "output/trans.mp3"
+    # output_final = "output_final.mp4"
+    # threshold = 1.20
+    # sync_audio_video(input_video, input_audio, output_final, threshold)      
+
+    input_video = "output/数字人播报_without_audio.mp4"
+    input_audio = "output/数字人播报_trans_audio.mp3"
+    subtitle = "output/数字人播报_trans.srt"
+    original_audio = "output/数字人播报.mp3"
     output_final = "output_final.mp4"
-    threshold = 1.35
-    sync_audio_video(input_video, input_audio, output_final, threshold)            
+    threshold = 1.20
+    sync_audio_video_subtitle(input_video, input_audio, subtitle, original_audio, output_final, threshold)        
