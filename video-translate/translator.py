@@ -95,10 +95,10 @@ class NiuTransTranslator:
             return None
 
 @execute_time
-def text_translate(text, from_lang='auto', to_lang='auto'):
+def text_translate(app_id, api_key, api_secret, text, from_lang='auto', to_lang='auto'):
     translator = NiuTransTranslator(app_id, api_key, api_secret)
     trans_text = translator.translate(text, from_lang, to_lang)
-    return trans_text
+    return trans_text['data']['result']['trans_result']['dst']
 
 @execute_time
 def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='auto', to_lang='auto'):

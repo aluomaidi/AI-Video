@@ -21,7 +21,7 @@ def merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file):
     subprocess.run(ffmpeg_command, check=True)
     
 @execute_time    
-async def text_to_speech(text, audio_file, voice, rate):
+async def text_to_speech(text, audio_file, voice, rate='+0%'):
     try:
         communicate = edge_tts.Communicate(text, voice, rate=rate)
         await communicate.save(audio_file)
