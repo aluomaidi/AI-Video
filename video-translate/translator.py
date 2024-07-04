@@ -5,6 +5,7 @@ import base64
 import hmac
 import json
 from utils import parse_srt_file, save_srt_file
+from execute_time import execute_time
 
 class NiuTransTranslator:
     def __init__(self, app_id="e8437c4a", api_key="35586b25a94f4b4fe61889fc307eaabf", api_secret="OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl", host="ntrans.xfyun.cn"):
@@ -93,11 +94,13 @@ class NiuTransTranslator:
             print(f"请求异常：{e}")
             return None
 
+@execute_time
 def text_translate(text, from_lang='auto', to_lang='auto'):
     translator = NiuTransTranslator(app_id, api_key, api_secret)
     trans_text = translator.translate(text, from_lang, to_lang)
     return trans_text
 
+@execute_time
 def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='auto', to_lang='auto'):
     srt_data = parse_srt_file(origin_srt_file)
     translator = NiuTransTranslator(app_id, api_key, api_secret)

@@ -3,6 +3,7 @@ import edge_tts
 import os
 import subprocess
 from utils import parse_srt_file
+from execute_time import execute_time
 
 def merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file):
     # 提取时间戳信息
@@ -19,6 +20,7 @@ def merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file):
     # 执行ffmpeg命令
     subprocess.run(ffmpeg_command, check=True)
     
+@execute_time    
 async def text_to_speech(text, audio_file, voice, rate):
     try:
         communicate = edge_tts.Communicate(text, voice, rate=rate)
@@ -26,6 +28,7 @@ async def text_to_speech(text, audio_file, voice, rate):
     except Exception as e:
         print(f"An error occurred during synthesis: {e}")
 
+@execute_time
 async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     srt_data = parse_srt_file(srt)
     temp_files = []

@@ -1,6 +1,8 @@
 import whisper
 from whisper.utils import get_writer
+from execute_time import execute_time
 
+@execute_time
 def speech_to_srt(audio, language, srt_path, word_timestamps=True, model='small'):
     model = whisper.load_model(model)
     if language == 'zh':

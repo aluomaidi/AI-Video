@@ -10,3 +10,6 @@ output/
 # 忽略python缓存的字节码文件
 __pycache__
 *.pyc
+
+#忽略日志文件
+*.log

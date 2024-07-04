@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import os
 import math
+from execute_time import execute_time
 
 def parse_srt_file(srt_file):
     """
@@ -157,6 +158,7 @@ def merge_video_with_subtitle(input_video, subtitle_file, output_file):
     # 使用subprocess运行命令
     subprocess.run(shlex.split(cmd))
 
+@execute_time
 def sync_audio_video(input_video, input_audio, output_final):
     # 获取视频和音频长度
     video_length = get_media_length(input_video)
@@ -171,6 +173,7 @@ def sync_audio_video(input_video, input_audio, output_final):
     # 删除临时文件
     subprocess.run(shlex.split(f"rm {adjusted_audio} {adjusted_video}"))    
 
+@execute_time
 def sync_video_subtitle(input_video, subtitle, subtitle_length, output_final):
     # 获取视频长度
     video_length = get_media_length(input_video)
