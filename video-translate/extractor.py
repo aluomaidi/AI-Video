@@ -3,10 +3,16 @@ import subprocess
 import shlex
 import os
 from execute_time import execute_time
+from utils import extract_filename
 
 @execute_time
-def extract_audio(video, audio, audio_format='mp3'):
-    ffmpeg.input(video).filter('highpass', '300').output(audio, format=audio_format).run(overwrite_output=True)
+def extract_audio(video, path="."):
+    filename, _ = extract_filename(video)
+    audio_name = path + "/" + filename + ".mka"
+    cmd = f"ffmpeg -i {video} -vn -acodec copy {audio_name} -y"
+    subprocess.run(shlex.split(cmd))
+    return audio_name
+    #ffmpeg.input(video).filter('highpass', '300').output(audio, format=audio_format).run(overwrite_output=True)
 
 @execute_time
 def extract_frames(video, frames_dir, fps='24', frames_pattern='frame_%06d.png'):
@@ -19,20 +25,14 @@ def extract_frames(video, frames_dir, fps='24', frames_pattern='frame_%06d.png')
     subprocess.run(['ffmpeg', '-i', video, '-vf', f'fps={fps}', output_pattern, '-y'])
 
 @execute_time
-def extract_video_without_audio(input_video, output_video):
-    """
-    从视频文件中提取无声视频。
-    
-    参数:
-    input_video (str): 输入视频文件的路径。
-    output_video (str): 输出无声视频文件的路径。
-    """
-    cmd = f"ffmpeg -i {input_video} -an {output_video} -y"
+def extract_video_without_audio(video, path="."):
+    filename, suffix = extract_filename(video)
+    video_name = filename + "-noaudio" + suffix
+    cmd = f"ffmpeg -i {video} -c:v copy -an {path}/{video_name} -y"
     subprocess.run(shlex.split(cmd))
+    return video_name
 
 if __name__ == '__main__':
-    video = '重庆森林片段.mp4'
-    audio = 'output/重庆森林片段.mp3'
-    extract_audio(video, audio) 
-
-    extract_frames(video, "output/frames")
+    video = 'gzhmWuiE.mp4'
+    audio = extract_audio(video, "output")
+    video = extract_video_without_audio(video, "output")

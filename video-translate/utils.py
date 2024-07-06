@@ -123,8 +123,7 @@ def adjust_subtitle_timestamp(subtitle, multiplier):
  #提取文件名称的函数
 def extract_filename(file_path):
     base_name = os.path.basename(file_path)
-    filename, _ = os.path.splitext(base_name)  # 分割文件名和扩展名
-    return base_name, filename
+    return os.path.splitext(base_name)
 
 def get_media_length(file_path):
     """
@@ -134,6 +133,7 @@ def get_media_length(file_path):
     result = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     return float(result.stdout.strip())
 
+@execute_time
 def adjust_audio_speed(input_audio, adjustment_ratio, output_audio):
     """
     调整音频速度。adjustment_ratio: 调整速率的比例。例如，0.5 表示播放速度减慢一半，2.0 表示播放速度加快一倍
@@ -141,11 +141,12 @@ def adjust_audio_speed(input_audio, adjustment_ratio, output_audio):
     cmd = f"ffmpeg -i {input_audio} -filter:a 'atempo={adjustment_ratio}' -vn {output_audio} -y"
     subprocess.run(shlex.split(cmd))
 
+@execute_time
 def adjust_video_speed(input_video, adjustment_ratio, output_video):
     """
     调整视频速度。adjustment_ratio: 调整速率的比例。例如，0.5 表示播放速度减慢一半，2.0 表示播放速度加快一倍。
     """
-    cmd = f"ffmpeg -i {input_video} -filter:v 'setpts={1/adjustment_ratio}*PTS' {output_video} -y"
+    cmd = f"ffmpeg -i {input_video} -filter:v 'setpts={1/adjustment_ratio}*PTS' -an {output_video} -y"
     subprocess.run(shlex.split(cmd))
 
 def merge_audio_video(input_video, input_audio, output_file):
@@ -195,3 +196,14 @@ def split_video(input_video, start_time, duration, output_video):
     """
     cmd = f"ffmpeg -i {input_video} -ss {start_time} -t {duration} -c copy {output_video} -y"
     subprocess.run(shlex.split(cmd))
+
+if __name__ == '__main__':
+    # audio1 = 'output/gzhmWuiE.mka'
+    # audio2 = 'output/gzhmWuiE_2.mka'
+
+    # adjust_audio_speed(audio1, 1.5, audio2)
+
+    video1 = 'output/gzhmWuiE-noaudio.mp4'
+    video2 = 'output/gzhmWuiE-noaudio_2.mp4'
+
+    adjust_video_speed(video1, 0.9, video2)

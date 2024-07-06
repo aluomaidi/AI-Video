@@ -5,10 +5,10 @@ import extractor as extractor
 import recognizer as recognizer
 import translator as translator
 import synthesizer as synthesizer
-from utils import sync_audio_video, sync_video_subtitle, extract_filename, get_media_length
+from utils import sync_audio_video, extract_filename
 
 
-original_video = "数字人播报.mp4"
+original_video = "gzhmWuiE.mp4"
 original_language = 'zh'
 trans_language = 'en'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -20,7 +20,6 @@ api_secret = "OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl"
 
 output_dir = 'output'
 _, filename = extract_filename(original_video)
-original_audio = os.path.join(output_dir, f"{filename}.mp3")
 video_without_audio = os.path.join(output_dir, f"{filename}_without_audio.mp4")
 original_srt = os.path.join(output_dir, f"{filename}.srt")
 trans_srt = os.path.join(output_dir, f"{filename}_trans.srt")
@@ -32,9 +31,9 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 #抽音频
-extractor.extract_audio(original_video, original_audio)
+original_audio = extractor.extract_audio(original_video, output_dir)
 #抽无声视频
-extractor.extract_video_without_audio(original_video, video_without_audio)
+video_without_audio = extractor.extract_video_without_audio(original_video, output_dir)
 # 识别
 text = recognizer.speech_to_text(original_audio, original_language)
 # 翻译
@@ -45,6 +44,6 @@ asyncio.run(synthesizer.text_to_speech(trans_text, trans_audio, voice))
 sync_audio_video(video_without_audio, trans_audio, trans_video)
 
 #删除临时文件
-os.remove(original_audio)
-os.remove(video_without_audio)
-os.remove(trans_audio)
+# os.remove(original_audio)
+# os.remove(video_without_audio)
+# os.remove(trans_audio)
