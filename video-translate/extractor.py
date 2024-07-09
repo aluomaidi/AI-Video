@@ -27,8 +27,8 @@ def extract_frames(video, frames_dir, fps='24', frames_pattern='frame_%06d.png')
 @execute_time
 def extract_video_without_audio(video, path="."):
     filename, suffix = extract_filename(video)
-    video_name = filename + "-noaudio" + suffix
-    cmd = f"ffmpeg -i {video} -c:v copy -an {path}/{video_name} -y"
+    video_name = path + "/" + filename + "-noaudio" + suffix
+    cmd = f"ffmpeg -i {video} -c:v copy -an {video_name} -y"
     subprocess.run(shlex.split(cmd))
     return video_name
 

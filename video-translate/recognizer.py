@@ -21,7 +21,7 @@ def speech_to_srt(audio, language, srt_path, model='small', word_timestamps=True
         result = model.transcribe(audio, language=language, word_timestamps=word_timestamps)
     srt_writer = get_writer("srt", srt_path)
     srt_writer(result, audio, {"max_line_count":1,"max_line_width":20})
-    _, filename = extract_filename(audio)
+    filename, _ = extract_filename(audio)
     return result["text"], srt_path + "/" + filename + ".srt"
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ import hashlib
 import base64
 import hmac
 import json
-from utils import parse_srt_file, save_srt_file
+from utils import parse_srt_file, save_srt_file, extract_filename
 from execute_time import execute_time
 
 class NiuTransTranslator:
@@ -101,7 +101,7 @@ def text_translate(app_id, api_key, api_secret, text, from_lang='auto', to_lang=
     return trans_text['data']['result']['trans_result']['dst']
 
 @execute_time
-def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='auto', to_lang='auto'):
+def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt, from_lang='auto', to_lang='auto'):
     srt_data = parse_srt_file(origin_srt_file)
     translator = NiuTransTranslator(app_id, api_key, api_secret)
     trans_srt_data = []
@@ -109,7 +109,8 @@ def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt_f
         trans_text = translator.translate(text, from_lang, to_lang)
         dst_text = trans_text['data']['result']['trans_result']['dst']
         trans_srt_data.append((timestamp, dst_text))
-    save_srt_file(trans_srt_data, trans_srt_file)            
+    save_srt_file(trans_srt_data, trans_srt) 
+    return trans_srt           
         
 if __name__ == '__main__':
     app_id = "e8437c4a"

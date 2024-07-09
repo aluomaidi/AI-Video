@@ -8,7 +8,7 @@ import synthesizer as synthesizer
 from utils import sync_audio_video, extract_filename
 
 
-original_video = "gzhmWuiE.mp4"
+original_video = "中国工厂.mp4"
 original_language = 'zh'
 trans_language = 'en'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -19,9 +19,9 @@ api_secret = "OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl"
 
 
 output_dir = 'output'
-_, filename = extract_filename(original_video)
+filename, _ = extract_filename(original_video)
 video_without_audio = os.path.join(output_dir, f"{filename}_without_audio.mp4")
-original_srt = os.path.join(output_dir, f"{filename}.srt")
+# original_srt = os.path.join(output_dir, f"{filename}.srt")
 trans_srt = os.path.join(output_dir, f"{filename}_trans.srt")
 trans_audio = os.path.join(output_dir, f"{filename}_trans_audio.mp3")
 trans_video = os.path.join(output_dir, f"{filename}_{original_language}_to_{trans_language}.mp4")
@@ -35,7 +35,7 @@ original_audio = extractor.extract_audio(original_video, output_dir)
 #抽无声视频
 video_without_audio = extractor.extract_video_without_audio(original_video, output_dir)
 # 识别
-text = recognizer.speech_to_text(original_audio, original_language)
+text, original_srt = recognizer.speech_to_srt(original_audio, original_language, output_dir, "medium")
 # 翻译
 trans_text = translator.text_translate(app_id, api_key, api_secret, text, original_language, trans_language)
 # 合成
@@ -44,6 +44,6 @@ asyncio.run(synthesizer.text_to_speech(trans_text, trans_audio, voice))
 sync_audio_video(video_without_audio, trans_audio, trans_video)
 
 #删除临时文件
-# os.remove(original_audio)
-# os.remove(video_without_audio)
-# os.remove(trans_audio)
+os.remove(original_audio)
+os.remove(video_without_audio)
+os.remove(trans_audio)
