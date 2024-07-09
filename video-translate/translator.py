@@ -6,6 +6,11 @@ import hmac
 import json
 from utils import parse_srt_file, save_srt_file, extract_filename
 from execute_time import execute_time
+from wsgiref.handlers import format_date_time
+from time import mktime
+from urllib.parse import urlencode
+from datetime import datetime
+
 
 class NiuTransTranslator:
     def __init__(self, app_id="e8437c4a", api_key="35586b25a94f4b4fe61889fc307eaabf", api_secret="OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl", host="ntrans.xfyun.cn"):
@@ -94,6 +99,84 @@ class NiuTransTranslator:
             print(f"请求异常：{e}")
             return None
 
+class XFTranslator:
+    def __init__(self, app_id="e8437c4a", api_secret="OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl", api_key="35586b25a94f4b4fe61889fc307eaabf", res_id="its_en_cn_word"):
+        self.APPId = app_id
+        self.APISecret = api_secret
+        self.APIKey = api_key
+        self.RES_ID = res_id
+        self.url = 'https://itrans.xf-yun.com/v1/its'
+
+    def sha256base64(self, data):
+        sha256 = hashlib.sha256()
+        sha256.update(data)
+        digest = base64.b64encode(sha256.digest()).decode(encoding='utf-8')
+        return digest
+
+    def parse_url(self, request_url):
+        stidx = request_url.index("://")
+        host = request_url[stidx + 3:]
+        schema = request_url[:stidx + 3]
+        edidx = host.index("/")
+        if edidx <= 0:
+            raise ValueError("invalid request url: " + request_url)
+        path = host[edidx:]
+        host = host[:edidx]
+        return host, path, schema
+
+    def assemble_ws_auth_url(self, request_url, method="POST"):
+        host, path, schema = self.parse_url(request_url)
+        now = datetime.now()
+        date = format_date_time(mktime(now.timetuple()))
+        signature_origin = "host: {}\ndate: {}\n{} {} HTTP/1.1".format(host, date, method, path)
+        signature_sha = hmac.new(self.APISecret.encode('utf-8'), signature_origin.encode('utf-8'),
+                                 digestmod=hashlib.sha256).digest()
+        signature_sha = base64.b64encode(signature_sha).decode(encoding='utf-8')
+        authorization_origin = "api_key=\"{}\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"{}\"".format(
+            self.APIKey, signature_sha)
+        authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode(encoding='utf-8')
+        values = {
+            "host": host,
+            "date": date,
+            "authorization": authorization
+        }
+        return request_url + "?" + urlencode(values)
+
+    def translate(self, text, from_lang="cn", to_lang="en"):
+        if from_lang == "zh":
+            from_lang = "cn"
+        if to_lang == "zh":
+            to_lang = "cn"    
+        body = {
+            "header": {
+                "app_id": self.APPId,
+                "status": 3,
+                "res_id": self.RES_ID
+            },
+            "parameter": {
+                "its": {
+                    "from": from_lang,
+                    "to": to_lang,
+                    "result": {}
+                }
+            },
+            "payload": {
+                "input_data": {
+                    "encoding": "utf8",
+                    "status": 3,
+                    "text": base64.b64encode(text.encode("utf-8")).decode('utf-8')
+                }
+            }
+        }
+
+        request_url = self.assemble_ws_auth_url(self.url, "POST")
+        headers = {'content-type': "application/json", 'host': 'itrans.xf-yun.com', 'app_id': self.APPId}
+        response = requests.post(request_url, data=json.dumps(body), headers=headers)
+        tempResult = json.loads(response.content.decode())
+        base64.b64decode(tempResult['payload']['result']['text']).decode()
+        respData = json.loads(base64.b64decode(tempResult['payload']['result']['text']).decode())
+        return  respData
+    
 @execute_time
 def text_translate(app_id, api_key, api_secret, text, from_lang='auto', to_lang='auto'):
     translator = NiuTransTranslator(app_id, api_key, api_secret)
@@ -101,7 +184,7 @@ def text_translate(app_id, api_key, api_secret, text, from_lang='auto', to_lang=
     return trans_text['data']['result']['trans_result']['dst']
 
 @execute_time
-def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt, from_lang='auto', to_lang='auto'):
+def subtitle_translate_niu(origin_srt_file, trans_srt, from_lang='auto', to_lang='auto'):
     srt_data = parse_srt_file(origin_srt_file)
     translator = NiuTransTranslator(app_id, api_key, api_secret)
     trans_srt_data = []
@@ -110,13 +193,29 @@ def subtitle_translate(app_id, api_key, api_secret, origin_srt_file, trans_srt, 
         dst_text = trans_text['data']['result']['trans_result']['dst']
         trans_srt_data.append((timestamp, dst_text))
     save_srt_file(trans_srt_data, trans_srt) 
-    return trans_srt           
+    return trans_srt   
+
+@execute_time
+def subtitle_translate_xf(origin_srt_file, trans_srt, from_lang='auto', to_lang='auto'):
+    srt_data = parse_srt_file(origin_srt_file)
+    translator = XFTranslator()
+    trans_srt_data = []
+    for index, (timestamp, text) in enumerate(srt_data):
+        trans_text = translator.translate(text, from_lang, to_lang)
+        dst_text = trans_text['trans_result']['dst']
+        trans_srt_data.append((timestamp, dst_text))
+    save_srt_file(trans_srt_data, trans_srt) 
+    return trans_srt        
         
 if __name__ == '__main__':
-    app_id = "e8437c4a"
-    api_key = "35586b25a94f4b4fe61889fc307eaabf"
-    api_secret = "OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl"
+    # app_id = "e8437c4a"
+    # api_key = "35586b25a94f4b4fe61889fc307eaabf"
+    # api_secret = "OGEzZTI5ZjlkNmE3OTg2ZGNlZGY1YzJl"
 
-    origin_srt_file = "output/重庆森林片段.srt"
-    trans_srt_file = "output/重庆森林片段_en.srt"
-    subtitle_translate(app_id,api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='zh', to_lang='en')
+    # origin_srt_file = "output/重庆森林片段.srt"
+    # trans_srt_file = "output/重庆森林片段_en.srt"
+    # subtitle_translate(app_id,api_key, api_secret, origin_srt_file, trans_srt_file, from_lang='zh', to_lang='en')
+
+    translator = XFTranslator()
+    translated_text = translator.translate("科大讯飞", "zh", "en")
+    print('翻译结果:', translated_text)

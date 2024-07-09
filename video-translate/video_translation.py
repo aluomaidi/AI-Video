@@ -8,7 +8,7 @@ import synthesizer as synthesizer
 from utils import sync_audio_video, sync_video_subtitle, extract_filename, get_media_length
 
 
-original_video = "中国工厂.mp4"
+original_video = "中国工厂_short.mp4"
 original_language = 'zh'
 trans_language = 'en'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -36,9 +36,9 @@ original_audio = extractor.extract_audio(original_video, output_dir)
 #抽无声视频
 video_without_audio = extractor.extract_video_without_audio(original_video, output_dir)
 #音频识别（生成字幕）
-_, srt_file = recognizer.speech_to_srt(original_audio, original_language, output_dir, "medium")
+_, srt_file = recognizer.speech_to_srt(original_audio, original_language, output_dir, "large")
 # 字幕翻译
-trans_srt = translator.subtitle_translate(app_id, api_key, api_secret, srt_file, original_language, trans_language)
+trans_srt = translator.subtitle_translate_xf(srt_file, trans_srt, original_language, trans_language)
 # 字幕合成音频
 asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
 # 合并音频和视频,并同步时长
