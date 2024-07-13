@@ -48,6 +48,6 @@ sync_video_subtitle(trans_video, trans_srt, get_media_length(original_video), tr
 #删除临时文件
 os.remove(original_audio)
 os.remove(video_without_audio)
-os.remove(original_srt)
+# os.remove(original_srt)
 # os.remove(trans_srt)
 # os.remove(trans_audio)

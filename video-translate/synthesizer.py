@@ -51,7 +51,8 @@ async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     for index, (_, text) in enumerate(srt_data):
         temp_file = f"temp_{index}.mp3"
         temp_files.append(temp_file)
-        await text_to_speech(text, temp_file, voice, rate)
+        task = asyncio.create_task(text_to_speech(text, temp_file, voice, rate))
+        await task
 
     merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file)
     # 清理临时文件
