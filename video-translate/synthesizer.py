@@ -4,6 +4,7 @@ import os
 import subprocess
 from utils import parse_srt_file
 from execute_time import execute_time
+import shlex
 
 def merge_audio_clips_with_timestamps(srt_data, temp_files, audio_file):
     # 提取时间戳信息
@@ -31,8 +32,23 @@ async def text_to_speech(text, audio_file, voice, rate='+0%'):
 @execute_time
 async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     srt_data = parse_srt_file(srt)
+    #提取整个视频的起始时间，应对某些视频开始不说话的场景
+    timestamp = srt_data[0][0]
+    start, _ = timestamp.split(" --> ")
+    # 处理开始时间
+    start_parts = start.split(":")
+    start_hours = int(start_parts[0])
+    start_minutes = int(start_parts[1])
+    start_seconds, start_milliseconds = map(int, start_parts[2].replace(",", ".").split("."))
+    # 计算新的开始时间（以秒为单位）
+    start_time_seconds = (start_hours * 3600 + start_minutes * 60 + start_seconds) + start_milliseconds / 1000
+    #合成起始无声音频
+    cmd = f"ffmpeg -t {start_time_seconds} -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 silent_audio.mp3 -y"
+    # 使用subprocess运行命令
+    subprocess.run(shlex.split(cmd))
     temp_files = []
-    for index, (timestamp, text) in enumerate(srt_data):
+    temp_files.append("silent_audio.mp3")
+    for index, (_, text) in enumerate(srt_data):
         temp_file = f"temp_{index}.mp3"
         temp_files.append(temp_file)
         await text_to_speech(text, temp_file, voice, rate)

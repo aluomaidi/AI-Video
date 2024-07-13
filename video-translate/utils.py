@@ -3,7 +3,6 @@ from typing import List, Tuple
 import subprocess
 import shlex
 import os
-import math
 from execute_time import execute_time
 
 def parse_srt_file(srt_file):

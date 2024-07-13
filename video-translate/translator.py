@@ -178,21 +178,21 @@ class XFTranslator:
         return  respData
     
 @execute_time
-def text_translate(app_id, api_key, api_secret, text, from_lang='auto', to_lang='auto'):
-    translator = NiuTransTranslator(app_id, api_key, api_secret)
+def text_translate(text, from_lang='auto', to_lang='auto'):
+    translator = NiuTransTranslator()
     trans_text = translator.translate(text, from_lang, to_lang)
     return trans_text['data']['result']['trans_result']['dst']
 
 @execute_time
 def subtitle_translate_niu(origin_srt_file, trans_srt, from_lang='auto', to_lang='auto'):
     srt_data = parse_srt_file(origin_srt_file)
-    translator = NiuTransTranslator(app_id, api_key, api_secret)
+    translator = NiuTransTranslator()
     trans_srt_data = []
     for index, (timestamp, text) in enumerate(srt_data):
         trans_text = translator.translate(text, from_lang, to_lang)
         dst_text = trans_text['data']['result']['trans_result']['dst']
         trans_srt_data.append((timestamp, dst_text))
-    save_srt_file(trans_srt_data, trans_srt) 
+    save_srt_file(trans_srt_data, trans_srt)
     return trans_srt   
 
 @execute_time
@@ -204,7 +204,7 @@ def subtitle_translate_xf(origin_srt_file, trans_srt, from_lang='auto', to_lang=
         trans_text = translator.translate(text, from_lang, to_lang)
         dst_text = trans_text['trans_result']['dst']
         trans_srt_data.append((timestamp, dst_text))
-    save_srt_file(trans_srt_data, trans_srt) 
+    save_srt_file(trans_srt_data, trans_srt)
     return trans_srt        
         
 if __name__ == '__main__':

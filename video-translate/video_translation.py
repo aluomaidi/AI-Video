@@ -36,7 +36,7 @@ original_audio = extractor.extract_audio(original_video, output_dir)
 #抽无声视频
 video_without_audio = extractor.extract_video_without_audio(original_video, output_dir)
 #音频识别（生成字幕）
-_, srt_file = recognizer.speech_to_srt(original_audio, original_language, output_dir, "large")
+_, srt_file = recognizer.speech_to_srt(original_audio, original_language, output_dir, "medium")
 # 字幕翻译
 trans_srt = translator.subtitle_translate_xf(srt_file, trans_srt, original_language, trans_language)
 # 字幕合成音频
@@ -49,5 +49,5 @@ sync_video_subtitle(trans_video, trans_srt, get_media_length(original_video), tr
 os.remove(original_audio)
 os.remove(video_without_audio)
 os.remove(original_srt)
-os.remove(trans_srt)
-os.remove(trans_audio)
+# os.remove(trans_srt)
+# os.remove(trans_audio)
