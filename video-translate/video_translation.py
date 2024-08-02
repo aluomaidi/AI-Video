@@ -5,10 +5,10 @@ import extractor as extractor
 import recognizer as recognizer
 import translator as translator
 import synthesizer as synthesizer
-from utils import sync_audio_video, sync_video_subtitle, extract_filename, get_media_length
+from utils import *
 
 
-original_video = "中国工厂_short.mp4"
+original_video = "8.mp4"
 original_language = 'zh'
 trans_language = 'en'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -40,14 +40,13 @@ _, srt_file = recognizer.speech_to_srt(original_audio, original_language, output
 # 字幕翻译
 trans_srt = translator.subtitle_translate_xf(srt_file, trans_srt, original_language, trans_language)
 # 字幕合成音频
-asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
+audio_start_seconds = asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
 # 合并音频和视频,并同步时长
-sync_audio_video(video_without_audio, trans_audio, trans_video)
-# 视频加字幕
-sync_video_subtitle(trans_video, trans_srt, get_media_length(original_video), trans_video_subtitle)
+sync_audio_video_subtitle(video_without_audio, trans_audio, audio_start_seconds, trans_srt, get_media_length(original_video), trans_video)
+
 #删除临时文件
 os.remove(original_audio)
 os.remove(video_without_audio)
-# os.remove(original_srt)
-# os.remove(trans_srt)
-# os.remove(trans_audio)
+os.remove(original_srt)
+os.remove(trans_srt)
+os.remove(trans_audio)

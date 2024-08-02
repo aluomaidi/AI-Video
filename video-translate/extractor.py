@@ -8,11 +8,10 @@ from utils import extract_filename
 @execute_time
 def extract_audio(video, path="."):
     filename, _ = extract_filename(video)
-    audio_name = path + "/" + filename + ".mka"
-    cmd = f"ffmpeg -i {video} -vn -acodec copy {audio_name} -y"
+    audio_name = path + "/" + filename + ".mp3"
+    cmd = f"ffmpeg -i {video}  -q:a 0 -map a {audio_name} -y"
     subprocess.run(shlex.split(cmd))
     return audio_name
-    #ffmpeg.input(video).filter('highpass', '300').output(audio, format=audio_format).run(overwrite_output=True)
 
 @execute_time
 def extract_frames(video, frames_dir, fps='24', frames_pattern='frame_%06d.png'):
