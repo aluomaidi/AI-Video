@@ -41,14 +41,9 @@ async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     start_hours = int(start_parts[0])
     start_minutes = int(start_parts[1])
     start_seconds, start_milliseconds = map(int, start_parts[2].replace(",", ".").split("."))
-    # 计算新的开始时间（以秒为单位）
-    start_time_seconds = (start_hours * 3600 + start_minutes * 60 + start_seconds) + start_milliseconds / 1000
-    # if start_time_seconds > 0:
-    #     #合成起始无声音频
-    #     cmd = f"ffmpeg -t {start_time_seconds} -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 silent_audio.mp3 -y"
-    #     # 使用subprocess运行命令
-    #     subprocess.run(shlex.split(cmd))
-    #     temp_files.append("silent_audio.mp3")
+    # 计算新的开始时间（以毫秒为单位）
+    start_time_miliseconds = (start_hours * 3600 + start_minutes * 60 + start_seconds) * 1000 + start_milliseconds
+   
     # 生成音频文件
     for index, (_, text) in enumerate(srt_data):
         temp_file = f"temp_{index}.mp3"
@@ -61,7 +56,7 @@ async def srt_to_speech(srt, audio_file, voice, rate='+0%'):
     for temp_file in temp_files:
         os.remove(temp_file)
 
-    return start_time_seconds    
+    return start_time_miliseconds    
 
 if __name__ == "__main__":
     # Example usage

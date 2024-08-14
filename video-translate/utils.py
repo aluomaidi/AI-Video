@@ -133,17 +133,19 @@ def get_media_length(file_path):
     return float(result.stdout.strip())
 
 @execute_time
-def sync_audio_video_subtitle(input_video, input_audio, audio_start, subtitle, subtitle_length, output_final):
+def sync_audio_video_subtitle(input_video, input_audio, start_time_miliseconds, subtitle, subtitle_length, output_final):
     # 获取视频和音频长度
     video_length = get_media_length(input_video)
     audio_length = get_media_length(input_audio)
     #对齐音频和视频长度
     average = (audio_length + video_length) / 2
+    setpts = round(average/video_length, 2)
+    atempo = round(audio_length/average, 2)
     #改字幕timestamp，确保字幕匹配视频
     subtitle_adjusted = adjust_subtitle_timestamp(subtitle, average/subtitle_length)
-    if audio_start == 0:
-        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={average/video_length}*PTS[v];[1:a]atempo={audio_length/average}[a];[v]subtitles={subtitle_adjusted}[v_sub]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
-    elif audio_start > 0:
-        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={average/video_length}*PTS[v];[1:a]atempo={audio_length/average},adelay={audio_start}[a];[v]subtitles={subtitle_adjusted}[v_sub]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
+    if start_time_miliseconds == 0:
+        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=Impact,FontSize=8,PrimaryColour=&H00FF00FF'[v_sub];[1:a]atempo={atempo}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
+    elif start_time_miliseconds > 0:
+        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=Impact,FontSize=8,PrimaryColour=&H00FF00FF'[v_sub];[1:a]atempo={atempo},adelay={start_time_miliseconds}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
     print(cmd)
     subprocess.run(shlex.split(cmd))

@@ -8,7 +8,7 @@ import synthesizer as synthesizer
 from utils import *
 
 
-original_video = "8.mp4"
+original_video = "7.mp4"
 original_language = 'zh'
 trans_language = 'en'
 voice = 'zh-CN-XiaoxiaoNeural'
@@ -40,9 +40,9 @@ _, srt_file = recognizer.speech_to_srt(original_audio, original_language, output
 # 字幕翻译
 trans_srt = translator.subtitle_translate_xf(srt_file, trans_srt, original_language, trans_language)
 # 字幕合成音频
-audio_start_seconds = asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
+start_time_miliseconds = asyncio.run(synthesizer.srt_to_speech(trans_srt, trans_audio, voice))
 # 合并音频和视频,并同步时长
-sync_audio_video_subtitle(video_without_audio, trans_audio, audio_start_seconds, trans_srt, get_media_length(original_video), trans_video)
+sync_audio_video_subtitle(video_without_audio, trans_audio, start_time_miliseconds, trans_srt, get_media_length(original_video), trans_video)
 
 #删除临时文件
 os.remove(original_audio)
