@@ -30,7 +30,9 @@ def execute_time(func):
         result = func(*args, **kwargs)  # 执行原函数
         end_time = time.time()  # 记录结束时间
         execution_time = end_time - start_time  # 计算执行时间
-        logger.debug(f"函数 {func.__name__} 执行时间: {execution_time} 秒")
+        if func.__name__ == 'extract_audio':
+            logger.debug(f"\n")
+        logger.debug(f"函数 {func.__name__}  执行时间: {execution_time} 秒")
         return result
     return wrapper
 

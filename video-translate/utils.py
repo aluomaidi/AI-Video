@@ -146,8 +146,8 @@ def sync_audio_video_subtitle(input_video, input_audio, start_time_miliseconds, 
     subtitle_adjusted = adjust_subtitle_timestamp(subtitle, sub_multi)
     start_time_miliseconds = start_time_miliseconds * sub_multi
     if start_time_miliseconds == 0:
-        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=Impact,FontSize=8,PrimaryColour=&H00FF00FF'[v_sub];[1:a]atempo={atempo}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
+        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=思源黑体,FontSize=10,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1'[v_sub];[1:a]atempo={atempo}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
     elif start_time_miliseconds > 0:
-        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=Impact,FontSize=8,PrimaryColour=&H00FF00FF'[v_sub];[1:a]atempo={atempo},adelay={start_time_miliseconds}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
+        cmd = f"ffmpeg -i {input_video} -i {input_audio} -filter_complex \"[0:v]setpts={setpts}*PTS[v];[v]subtitles={subtitle_adjusted}:force_style='FontName=思源黑体,FontSize=10,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=1'[v_sub];[1:a]atempo={atempo},adelay={start_time_miliseconds}[a]\" -map \"[v_sub]\" -map \"[a]\" {output_final} -y"
     # print(cmd)
     subprocess.run(shlex.split(cmd))
